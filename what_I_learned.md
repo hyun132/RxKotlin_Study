@@ -82,15 +82,16 @@
 
     즉 데이터를 소비자가 직접 가져오느냐, 생산자가 전달해주느냐에 차이가 있다.
 #### Reactive Stream에는 기본 규칙이 있다.
-    - 구독 시작 통지는 한 구독당 한 번만 발생한다.
-    - 통지는 순차적으로 이루어진다.
-      (여러 통지를 동시에 할 수 없다.데이터가 동시에 통지돼 불일치가 발생하는 것을 방지하기 위해??자세히 설명 추가)
-    - null을 통지하지 않는다.
-    - publisher의 처리는 완료 또는 에러를 통지해 종료한다.
-      (완료/에러 발생 이후에는 더 이상이 데이터 통지나 완료/에러 통지가 발생하지 않는다)
+- 구독 시작 통지는 한 구독당 한 번만 발생한다.
+- 통지는 순차적으로 이루어진다.
+  (여러 통지를 동시에 할 수 없다.데이터가 동시에 통지돼 불일치가 발생하는 것을 방지하기 위해??자세히 설명 추가)
+- null을 통지하지 않는다.
+- publisher의 처리는 완료 또는 에러를 통지해 종료한다.
+  (완료/에러 발생 이후에는 더 이상이 데이터 통지나 완료/에러 통지가 발생하지 않는다)
 
 ###RxJava
-    RxJava의 원리와 구조를 알아보자
+   RxJava의 원리와 구조를 알아보자
+    
 #### RxJava의 특징
   - 앞서 언급한 바와 같이 RxJava는 소비자가 생산자를 구독하는 형태이다.
   즉, 데이터를 생성하는 측과 소비하는 측을 나눌 수 있기 때문에 쉽게 데이터 스트림을 처리할 수 있다
@@ -163,14 +164,13 @@ Flowable은 Subscription을 사용하여 통지하는 데이터의 개수를 제
 Observable은 배압기능이 없기 때문에 데이터 개수를 요청하지 않으며 Disposable 인터페이스를 사용하여 구독해지를 할 수 있다.  
 > 배압이란, 데이터 생산과 소비가 불균형적일 때 일어나는 현상이다. 무한개의 데이터를 1초마다 발행하고, 10초마다 소비 한다면, 소비되지 않은(소비 될) 데이터는 스트림에 계속 쌓이게 된다. 이로인해 OutOfMemoryError가 발생할 수 있다. 이러한 현상을 배압(Backpressure)이라고 하며 RxJava에서는 Subscription을 이용해 이를 제어한다.
   
-  ##### Flowable
-  일반적으로 Observable이 Flowable보다 오버헤드가 적다고 알려져 있다. (어떤 처리를 하기 위해 들어가는 간접적인 처리 시간 · 메모리)
+일반적으로 Observable이 Flowable보다 오버헤드가 적다고 알려져 있다. (어떤 처리를 하기 위해 들어가는 간접적인 처리 시간 · 메모리)
 https://github.com/ReactiveX/RxJava/wiki/Backpressure#reactive-pull-backpressure-isnt-magic
-   따라서 일반적으로 성능이 중요하다면 Observable을 사용하는것이 좋다고 한다.
+따라서 일반적으로 성능이 중요하다면 Observable을 사용하는것이 좋다고 한다.
         
   이 외에 OOM이나 MissingBackpressureException을 피하는 방법으로 Subscription을 사용해 
   
-  ##### Observable
+##### Observable & Observer
 - Observable의 동작을 설명하기 위해서는 크게 세 가지 요소가 필요합니다.
   Observable(데이터 생성자), Observer(구독자), Disposable(구독 제어).
 - Observable은 각 rx체인의 생성 블록으로 subscribe()의 파라미터로 Observer를 전달해 구독하게 됩니다.
@@ -179,7 +179,7 @@ https://github.com/ReactiveX/RxJava/wiki/Backpressure#reactive-pull-backpressure
   이렇게 구독을 하게 되면 Observable은 onNext()를 통해 Observer에게 값을 전달하고, Disposable을 통해 dispose()할 때 까지 값을 전달한다.
   ![image](https://user-images.githubusercontent.com/46836642/155872730-347c61f1-fb62-4d3b-949a-178db8cebc76.png)
   
-##### Flowable
+##### Flowable  & Subscriber
 - Flowable은 동작을 설명하기 위해서는 크게 세 가지 요소가 필요합니다.
   Flowable은(데이터 생성자), Subscriber(구독자), Subscription를(구독 제어 및 값 요청).
 - Flowable은 Observable과 Observer은 Subscriber과 유사하다.
@@ -211,6 +211,34 @@ https://github.com/ReactiveX/RxJava/wiki/Backpressure#reactive-pull-backpressure
     - 소량의 데이터
     - 동기방식일 때
   
+##### Subject
+`public abstract class Subject<T> extends Observable<T> implements Observer<T> {`
+
+##### Maybe
+
+
+#### 동작 순서
+https://proandroiddev.com/how-rxjava-chain-actually-works-2800692f7e13
+실제로 RxJava의 연산이 어떤 순서로 동작하는지 알아보자
+1. 먼저 일련의 연산이 정의되고 아직 구독이 일어나지 않은 상태
+    정의된 연산의 생산자부터 하위연산 차례로 참조가 발생한다.??
+    ![image](https://user-images.githubusercontent.com/46836642/155881972-3d427a8f-9c17-48ee-816a-855a7c1076a3.png)
+2. 앞서 정의된 연산을 구독한 상태
+    ![image](https://user-images.githubusercontent.com/46836642/155882178-a286921e-807a-49ae-a116-a47bbbfdb4db.png)
+3. 데이터 통지
+    ![image](https://user-images.githubusercontent.com/46836642/155882302-b3e86db7-f962-4695-8137-c566c0cdb200.png)
+
+#### Disposable
+- 앞서 언급했듯 Disposable/Subscription 을 통해 구독을 취소할 수 있다.
+생산자 내부에 이처럼 연산 중간에 구독을 취소했는지 확인하는 로직이 있기 때문이다.
+    ```
+   @Override
+   public void onNext(T t) {
+        if (!isDisposed()) {
+    ```
+  
+  
+
 
 #### CompositeDisposable
 가지고 있는 모든 disposable들의 dispose()를 호출할 수 있는 클래스로, 한번에 여러 구독을 취소 할 수 있다.
@@ -240,6 +268,9 @@ fun main() {
     compositeDisposable.dispose()
 }
 ```
+
+#### RxJava에서 최적화
+
 
 ### RxJava에서의 비동기
 
@@ -423,3 +454,33 @@ fun main() {
     6 : RxComputationThreadPool-1
     ...
     ```
+  
+#### 연산자 내에서 생성되는 비동기 생성자
+- RxJava의 메서드 중에는 flatMap처럼 연산자 내부에서 생성자를 생성하는 메서드가 있다.
+    ```
+    fun simpleFlatMapExample(){
+        Flowable.just(1,2,3,4,5)
+            .flatMap {
+                Flowable.just(it*it,it*it*it).delay(1,TimeUnit.SECONDS)
+            }
+            .subscribe { println("${Thread.currentThread().name} : $it") }
+    
+        Thread.sleep(3000)
+    }
+    
+    RxComputationThreadPool-4 : 16
+    RxComputationThreadPool-4 : 64
+    RxComputationThreadPool-2 : 1
+    RxComputationThreadPool-2 : 1
+    RxComputationThreadPool-2 : 4
+    RxComputationThreadPool-2 : 9
+    ```
+  위의 결과 처럼 통지된 데이터 순서가 받은 데이터의 순서와 다르다. 따라서 데이터 순서가 중요하다면 flatMap은 적합하지 않다.
+  이 외에도 concatMap 등의 연산이 있는데 이 부분은 연산자 부분에서 다루기로 하자.
+
+
+### Rxjava에서의 에러처리
+- Rxjava는 에러 발생시 대응하는 방법을 제공한다.
+    - 소비자에게 에러 통지하기(onError())
+    - 처리작업 재시도()
+    - 대체 데이터 통지
