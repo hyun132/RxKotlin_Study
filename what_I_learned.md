@@ -356,7 +356,10 @@ https://github.com/ReactiveX/RxJava/wiki/Backpressure#reactive-pull-backpressure
         get: emit source3 : 1001
     ```
     Subject는 hotObservable이기 때문에 구독시점 이전에 방출된 값(1000,0,1001,1)은 받지 못한것을 알 수 있다.
+
 ##### Maybe
+##### Single
+##### Completable
 
 
 #### 동작 순서
@@ -685,3 +688,7 @@ https://proandroiddev.com/how-rxjava-chain-actually-works-2800692f7e13
         get 2
         error : error occurred
         ```
+
+#### 연산자
+- filter 연산자
+- backpressure를 제공하지 않는 Observable 
