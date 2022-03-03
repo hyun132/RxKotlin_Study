@@ -1,0 +1,4 @@
+package operator
+
+class MergeExample {
+}
