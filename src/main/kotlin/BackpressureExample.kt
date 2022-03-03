@@ -16,8 +16,8 @@ fun main() {
 
 //    backpressureExampleFlowableWithBackpressureStrategy()
 //    backpressureExampleFlowableWithBackpressureStrategyDrop()
-    backpressureExampleFlowableWithBackpressureStrategyDrop2()
-//    backpressureExampleFlowable()
+//    backpressureExampleFlowableWithBackpressureStrategyDrop2()
+    backpressureExampleFlowable()
 //    backpressureExampleObservable()
 }
 

@@ -66,8 +66,8 @@ fun createFlowabelWithfromIterable() {
 fun basicSample(){
     Flowable
         .interval(30L, TimeUnit.MILLISECONDS)
-        .take(6)
+//        .take(6)
         .subscribe({println(it)})
 
-    Thread.sleep(500)
+//    Thread.sleep(500)
 }
