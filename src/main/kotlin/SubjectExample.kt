@@ -1,7 +1,10 @@
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.schedulers.Schedulers
+import io.reactivex.rxjava3.subjects.AsyncSubject
+import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
 
@@ -19,14 +22,16 @@ val printObserver = object : Observer<String> {
     }
 
     override fun onComplete() {
-        println("onComplete")
+        println("printObserver : onComplete")
     }
 }
 
 fun main() {
 //    publishSubjectExample()
 //    publishSubjectExample2()
-    publishSubjectExample3()
+//    publishSubjectExample3()
+//    publishSubjectExample4()
+    behaviorSubjectExample()
 }
 
 
@@ -43,10 +48,6 @@ fun publishSubjectExample() {
     source2.map { "source2 : $it" }.subscribe(subject)
 
     subject.subscribe { println("subscriber : $it") }
-
-
-
-
 
     Thread.sleep(3000)
 }
@@ -72,8 +73,9 @@ fun publishSubjectExample2() {
 
 fun publishSubjectExample3() {
     val source3 = Observable.just(1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009)
-        .doOnNext { println("source3 emit:$it") }
-    val source4 = Observable.interval(50, TimeUnit.MILLISECONDS).doOnNext { println("source4 emit:$it") }
+        .doOnNext { println("source3 emit:$it") }.doOnComplete { println("source3 is Complete") }
+    val source4 = Observable.interval(50, TimeUnit.MILLISECONDS)
+        .doOnNext { println("source4 emit:$it") }
     val subject = PublishSubject.create<String>()
 
 
@@ -82,5 +84,59 @@ fun publishSubjectExample3() {
     Thread.sleep(100)
     subject.observeOn(Schedulers.newThread()).subscribe(printObserver)
 
+    Thread.sleep(2000)
+}
+
+fun publishSubjectExample4() {
+    val source3 = Observable.just(1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009)
+        .doOnNext { println("source3 emit:$it") }.doOnComplete { println("source3 complete") }
+    val source4 = Observable.interval(50, TimeUnit.MILLISECONDS)
+        .doOnNext { println("source4 emit:$it") }
+    val subject = PublishSubject.create<String>()
+
+    source4.map { "emit source4 : $it" }.subscribeOn(Schedulers.newThread()).subscribe(subject)
+    source3.map { Thread.sleep(100); "emit source3 : $it" }.subscribeOn(Schedulers.newThread()).subscribe(subject)
+    Thread.sleep(100)
+//    subject.observeOn(Schedulers.newThread()).subscribe(printObserver)
+    subject.observeOn(Schedulers.newThread()).subscribeBy(
+        onComplete = { println("newObserver Complete")}, onError = { println("newObserver Error3")}, onNext = { println("newObserver : $it") }
+    )
+    Thread.sleep(2000)
+
+}
+
+/**
+ * asyncSubject 데이터 소스에서 onComplete 호출 이전 마지막 데이터만 가져온다.
+ */
+fun asyncSubjectExample() {
+    val source3 = Observable.just(1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009)
+        .doOnNext { println("source3 emit:$it") }
+    val source4 = Observable.interval(50, TimeUnit.MILLISECONDS)
+        .doOnNext { println("source4 emit:$it") }
+    val asyncSubject = AsyncSubject.create<String>()
+
+
+    source4.map { "asyncSubject source4 : $it" }.subscribeOn(Schedulers.newThread()).subscribe(asyncSubject)
+    source3.map { Thread.sleep(100); "asyncSubject source3 : $it" }.subscribeOn(Schedulers.newThread())
+        .subscribe(asyncSubject)
+    asyncSubject.observeOn(Schedulers.newThread()).subscribe(printObserver)
+    Thread.sleep(2000)
+}
+
+/**
+ * 구독한 시점의 가장 최근 값 혹은 기본 값 데이터부터 받아온다.
+ */
+fun behaviorSubjectExample() {
+    val source3 = Observable.just(1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009)
+        .doOnNext { println("source3 emit:$it") }
+    val source4 = Observable.interval(50, TimeUnit.MILLISECONDS).doOnNext { println("source4 emit:$it") }
+    val behaviorSubject = BehaviorSubject.create<String>()
+
+    source4.map { "behaviorSubject source4 : $it" }.subscribeOn(Schedulers.newThread()).subscribe(behaviorSubject)
+    Thread.sleep(100)
+    source3.map { Thread.sleep(50); "behaviorSubject source3 : $it" }.subscribeOn(Schedulers.newThread())
+        .subscribe(behaviorSubject)
+    Thread.sleep(300)
+    behaviorSubject.observeOn(Schedulers.newThread()).subscribe(printObserver)
     Thread.sleep(2000)
 }

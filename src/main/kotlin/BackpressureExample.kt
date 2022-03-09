@@ -1,7 +1,5 @@
-import io.reactivex.rxjava3.core.BackpressureStrategy
-import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.core.FlowableSubscriber
-import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.*
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subscribers.ResourceSubscriber
@@ -10,13 +8,13 @@ import java.util.concurrent.TimeUnit
 
 fun main() {
 //    setBufferSize1()
-//    setBufferSize2()
+    setBufferSize2()
 //    setBufferSize2Observable()
 //    setbufferSize5Flowable()
 
 //    backpressureExampleFlowableWithBackpressureStrategy()
 //    backpressureExampleFlowableWithBackpressureStrategyDrop()
-    backpressureExampleFlowableWithBackpressureStrategyDrop2()
+//    backpressureExampleFlowableWithBackpressureStrategyDrop2()
 //    backpressureExampleFlowable()
 //    backpressureExampleObservable()
 }
@@ -131,35 +129,69 @@ fun backpressureExampleFlowableWithBackpressureStrategyDrop() {
 }
 
 fun backpressureExampleFlowableWithBackpressureStrategyDrop2(){
+    val subscriber = object :FlowableSubscriber<Int>{
+        lateinit var subscription: Subscription
+        override fun onSubscribe(s: Subscription) {
+            println("onSubscribe")
+            subscription = s
+            s.request(3)
+        }
+
+        override fun onNext(t: Int?) {
+//                Thread.sleep(3)
+            println(t)
+            subscription.request(3)
+        }
+
+        override fun onError(t: Throwable?) {
+            println(t?.message)
+        }
+
+        override fun onComplete() {
+            println("onComplete")
+        }
+
+    }
+
     Flowable.range(1,200)
         .onBackpressureDrop { println("drop $it") }
         .observeOn(Schedulers.computation(),false,16)
-        .subscribe(object :FlowableSubscriber<Int>{
-            lateinit var subscription: Subscription
-            override fun onSubscribe(s: Subscription) {
-                println("onSubscribe")
-                subscription = s
-                s.request(3)
-            }
-
-            override fun onNext(t: Int?) {
-//                Thread.sleep(3)
-                println(t)
-                subscription.request(3)
-            }
-
-            override fun onError(t: Throwable?) {
-                println(t?.message)
-            }
-
-            override fun onComplete() {
-                println("onComplete")
-            }
-
-        })
+        .subscribe(subscriber)
 
     Thread.sleep(1000)
 }
+
+fun observableBackprerssureByBuffer(){
+    val observable = object :Observer<Int>{
+
+        override fun onNext(t: Int?) {
+//                Thread.sleep(3)
+            println(t)
+        }
+
+        override fun onError(t: Throwable?) {
+            println(t?.message)
+        }
+
+        override fun onComplete() {
+            println("onComplete")
+        }
+
+        override fun onSubscribe(d: Disposable) {
+            println("onSubscribe")
+        }
+
+    }
+
+    Observable.range(1,200)
+//        .onBackpressureDrop { println("drop $it") }
+        .observeOn(Schedulers.computation(),false,16)
+        .subscribe(observable)
+
+    Thread.sleep(1000)
+}
+
+
 
 fun setBufferSize2() {
     val flowable = Flowable.interval(200, TimeUnit.MILLISECONDS)

@@ -1,4 +1,5 @@
 import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
@@ -8,7 +9,17 @@ fun main() {
 //    println("_____")
 //    justExample()
 //    chainingExample()
-    chainingExample2()
+//    chainingExample2()
+    reactiveStream()
+}
+
+fun reactiveStream(){
+    Observable.range(1,10)
+        .filter{it%2==0}
+        .map { "$it 는 짝수" }
+        .subscribe {
+            println(it)
+        }
 }
 
 fun intervalExample() {
